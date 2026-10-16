@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · PennyWise</title>
+  <meta name="description" content="PennyWise is a clean, accessible expense tracker for students. Track spending in RWF, search with regular expressions and stay under your monthly cap.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    try {
+      var savedSettings = JSON.parse(localStorage.getItem('pennywise:settings'));
+      if (savedSettings && (savedSettings.theme === 'light' || savedSettings.theme === 'dark')) {
+        document.documentElement.dataset.theme = savedSettings.theme;
+      }
+    } catch (error) {}
+  </script>
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <p class="brand"><span class="brand-mark" aria-hidden="true">P</span>PennyWise</p>
+    <nav class="site-nav" aria-label="Main">
+      <ul>
+        <li><a href="#dashboard" data-view="dashboard">Dashboard</a></li>
+        <li><a href="#records" data-view="records">Records</a></li>
+        <li><a href="#add" data-view="add">Add expense</a></li>
+        <li><a href="#settings" data-view="settings">Settings</a></li>
+        <li><a href="#about" data-view="about">About</a></li>
+      </ul>
+    </nav>
+    <div class="header-actions">
+      <button type="button" id="theme-toggle" class="btn ghost">
+        <span id="theme-icon" aria-hidden="true">☀</span>
+        <span class="btn-text" id="theme-label">Light mode</span>
+      </button>
+      <button type="button" id="help-btn" class="btn ghost" aria-haspopup="dialog">
+        <kbd aria-hidden="true">?</kbd>
+        <span class="btn-text">Shortcuts</span>
+      </button>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <section id="view-dashboard" class="view" aria-labelledby="h-dashboard">
+      <header class="view-head">
+        <h1 id="h-dashboard" tabindex="-1">Dashboard</h1>
+        <p class="lead">Where your money went, and how much of this month’s cap is left.</p>
+      </header>
+      <dl class="stats">
+        <div class="stat"><dt>Records</dt><dd id="stat-count">0</dd></div>
+        <div class="stat"><dt>Total spent</dt><dd id="stat-total">–</dd></div>
+        <div class="stat">
+          <dt>Top category</dt>
+          <dd id="stat-top">–</dd>
+          <dd class="sub" id="stat-top-sub"></dd>
+        </div>
+        <div class="stat"><dt>This month</dt><dd id="stat-month">–</dd></div>
+      </dl>
+      <div class="dash-grid">
+        <section class="panel cap-panel" aria-labelledby="h-cap">
+          <h2 id="h-cap">Monthly cap</h2>
+          <div class="meter" aria-hidden="true"><div class="meter-fill" id="meter-fill"></div></div>
+          <p class="cap-message" id="cap-polite" role="status" aria-live="polite"></p>
+          <p class="cap-message is-over" id="cap-assertive" role="alert" aria-live="assertive"></p>
+          <p class="hint">Change your cap in <a href="#settings">Settings</a>.</p>
+        </section>
+        <section class="panel" aria-labelledby="h-trend">
+          <h2 id="h-trend">Last 7 days</h2>
+          <p class="hint" id="trend-total"></p>
+          <div class="trend" id="trend" role="img" aria-label="Spending over the last 7 days"></div>
+        </section>
+        <section class="panel panel-wide" aria-labelledby="h-cats">
+          <h2 id="h-cats">Spending by category</h2>
+          <div class="cat-chart">
+            <div class="donut is-empty" id="donut" aria-hidden="true">
+              <div class="donut-center">
+                <span id="donut-total"></span>
+                <span class="donut-caption" id="donut-currency"></span>
+              </div>
+            </div>
+            <ul class="legend" id="legend"></ul>
+          </div>
+        </section>
+      </div>
+    </section>
+    <section id="view-records" class="view" aria-labelledby="h-records" hidden>
+      <header class="view-head">
+        <h1 id="h-records" tabindex="-1">Records</h1>
+        <p class="lead">Search with a regular expression, sort, edit in place or delete.</p>
+      </header>
+      <div id="records-controls">
+        <div class="toolbar">
+          <div class="field grow">
+            <label for="search-input">Search with a regex</label>
+            <input id="search-input" type="search" spellcheck="false" autocomplete="off"
+                   placeholder="e.g. (coffee|tea)" aria-describedby="search-help search-error">
+          </div>
+          <div class="field">
+            <label for="sort-select">Sort by</label>
+            <select id="sort-select">
+              <option value="date-desc">Date, newest first</option>
+              <option value="date-asc">Date, oldest first</option>
+              <option value="description-asc">Description, A to Z</option>
+              <option value="description-desc">Description, Z to A</option>
+              <option value="amount-desc">Amount, high to low</option>
+              <option value="amount-asc">Amount, low to high</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" id="search-ci" checked> Ignore case</label>
+        </div>
+        <p class="hint" id="search-help">
+          Try:
+          <button type="button" class="chip" data-pattern="\.\d{2}\b">amounts with cents</button>
+          <button type="button" class="chip" data-pattern="(coffee|tea)">coffee or tea</button>
+          <button type="button" class="chip" data-pattern="\b(\w+)\s+\1\b">repeated word</button>
+          <button type="button" class="chip" data-pattern="^moto">starts with “moto”</button>
+        </p>
+        <p class="error" id="search-error" role="alert"></p>
+        <p class="hint" id="search-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="table-wrap" id="table-wrap">
+        <table class="records-table" role="table">
+          <caption class="sr-only">Expense records</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader" scope="col" data-sortkey="date" aria-sort="descending">
+                <button type="button" class="sort-btn">Date <span class="sort-ind" aria-hidden="true"></span></button>
+              </th>
+              <th role="columnheader" scope="col" data-sortkey="description" aria-sort="none">
+                <button type="button" class="sort-btn">Description <span class="sort-ind" aria-hidden="true"></span></button>
+              </th>
+              <th role="columnheader" scope="col">Category</th>
+              <th role="columnheader" scope="col" class="num" data-sortkey="amount" aria-sort="none">
+                <button type="button" class="sort-btn">Amount (RWF) <span class="sort-ind" aria-hidden="true"></span></button>
+              </th>
+              <th role="columnheader" scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="records-body" role="rowgroup"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="empty-state" hidden>
+        <h2>No expenses yet</h2>
+        <p>Add your first expense, or load sample expenses to see how everything works.</p>
+        <div class="row">
+          <a class="btn primary" href="#add">Add an expense</a>
+          <button type="button" class="btn" id="load-sample-empty">Load sample data</button>
+        </div>
+      </div>
+      <div class="empty" id="no-results" hidden>
+        <h2>No matches</h2>
+        <p>No record matches this pattern. Change it, or turn on “Ignore case”.</p>
+      </div>
+    </section>
+    <section id="view-add" class="view" aria-labelledby="h-add" hidden>
+      <header class="view-head">
+        <h1 id="h-add" tabindex="-1">Add expense</h1>
+        <p class="lead">Every field is checked as you type. Amounts are in RWF.</p>
+      </header>
+      <form id="expense-form" class="panel form" novalidate autocomplete="off">
+        <div class="field">
+          <label for="f-description">Description</label>
+          <input id="f-description" type="text" maxlength="80" required
+                 aria-describedby="f-description-hint f-description-warn f-description-error">
+          <p class="hint" id="f-description-hint">For example, Lunch at cafeteria. No spaces at the start or end.</p>
+          <p class="warn" id="f-description-warn"></p>
+          <p class="error" id="f-description-error"></p>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-amount">Amount (RWF)</label>
+            <input id="f-amount" type="text" inputmode="decimal" required
+                   aria-describedby="f-amount-hint f-amount-error">
+            <p class="hint" id="f-amount-hint">Digits only, up to 2 decimals. For example, 1500 or 1500.50.</p>
+            <p class="error" id="f-amount-error"></p>
+          </div>
+          <div class="field">
+            <label for="f-category">Category</label>
+            <input id="f-category" type="text" list="category-options" required
+                   aria-describedby="f-category-hint f-category-error">
+            <datalist id="category-options"></datalist>
+            <p class="hint" id="f-category-hint">Pick one or type a new one. Letters, spaces and hyphens only.</p>
+            <p class="error" id="f-category-error"></p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-date">Date</label>
+          <div class="input-row">
+            <input id="f-date" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" required
+                   aria-describedby="f-date-hint f-date-error">
+            <button type="button" class="btn" id="f-date-today">Use today</button>
+          </div>
+          <p class="hint" id="f-date-hint">Format: YYYY-MM-DD.</p>
+          <p class="error" id="f-date-error"></p>
+        </div>
+        <div class="row">
+          <button type="submit" class="btn primary">Save expense</button>
+          <button type="reset" class="btn">Clear form</button>
+        </div>
+      </form>
+    </section>
+    <section id="view-settings" class="view" aria-labelledby="h-settings" hidden>
+      <header class="view-head">
+        <h1 id="h-settings" tabindex="-1">Settings</h1>
+        <p class="lead">Your cap, exchange rates, categories, theme and data.</p>
+      </header>
+      <form id="settings-form" class="panel form" novalidate autocomplete="off" aria-labelledby="h-budget">
+        <h2 id="h-budget">Budget and currency</h2>
+        <div class="field">
+          <label for="s-cap">Monthly cap (RWF)</label>
+          <input id="s-cap" type="text" inputmode="decimal" aria-describedby="s-cap-error">
+          <p class="error" id="s-cap-error"></p>
+        </div>
+        <div class="field">
+          <label for="s-currency">Show totals in</label>
+          <select id="s-currency">
+            <option value="RWF">RWF – Rwandan franc (base)</option>
+            <option value="USD">USD – US dollar</option>
+            <option value="EUR">EUR – Euro</option>
+          </select>
+        </div>
+        <fieldset class="field-row rates">
+          <legend>Exchange rates (RWF for 1 unit). Update these by hand.</legend>
+          <div class="field">
+            <label for="s-rate-USD">1 USD =</label>
+            <input id="s-rate-USD" type="text" inputmode="decimal" aria-describedby="s-rate-USD-error">
+            <p class="error" id="s-rate-USD-error"></p>
+          </div>
+          <div class="field">
+            <label for="s-rate-EUR">1 EUR =</label>
+            <input id="s-rate-EUR" type="text" inputmode="decimal" aria-describedby="s-rate-EUR-error">
+            <p class="error" id="s-rate-EUR-error"></p>
+          </div>
+        </fieldset>
+        <div class="row"><button type="submit" class="btn primary">Save settings</button></div>
+      </form>
+      <section class="panel form" aria-labelledby="h-appearance">
+        <h2 id="h-appearance">Appearance</h2>
+        <div class="field">
+          <label for="s-theme">Theme</label>
+          <select id="s-theme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </section>
+      <section class="panel form" aria-labelledby="h-categories">
+        <h2 id="h-categories">Categories</h2>
+        <ul class="cat-list" id="category-list"></ul>
+        <form id="category-form" novalidate autocomplete="off">
+          <div class="field">
+            <label for="s-new-category">New category</label>
+            <div class="input-row">
+              <input id="s-new-category" type="text" aria-describedby="s-new-category-hint s-new-category-error">
+              <button type="submit" class="btn">Add category</button>
+            </div>
+            <p class="hint" id="s-new-category-hint">Letters, spaces and hyphens only. Categories in use cannot be removed.</p>
+            <p class="error" id="s-new-category-error"></p>
+          </div>
+        </form>
+      </section>
+      <section class="panel form" aria-labelledby="h-data">
+        <h2 id="h-data">Your data</h2>
+        <p class="hint">Everything is saved automatically in this browser. Export a JSON file to back it up or move it to another device.</p>
+        <div class="field">
+          <label for="import-file">Import a JSON file</label>
+          <input id="import-file" type="file" accept="application/json,.json">
+        </div>
+        <div class="row">
+          <button type="button" class="btn" id="export-btn">Export JSON</button>
+          <button type="button" class="btn" id="load-sample">Load sample data</button>
+          <button type="button" class="btn danger-outline" id="clear-data">Delete all expenses</button>
+        </div>
+        <div id="import-result" class="import-result" role="status" aria-live="polite"></div>
+      </section>
+    </section>
+    <section id="view-about" class="view" aria-labelledby="h-about" hidden>
+      <header class="view-head">
+        <h1 id="h-about" tabindex="-1">About PennyWise</h1>
+        <p class="lead">A simple, private expense tracker for students.</p>
+      </header>
+      <section class="panel prose" aria-labelledby="h-purpose">
+        <h2 id="h-purpose">Purpose</h2>
+        <p>PennyWise helps students track their finances. Log what you spend, see where it goes, search your history with regular expressions and stay under a monthly cap. Everything runs in your browser and your data never leaves your device.</p>
+      </section>
+      <section class="panel prose" aria-labelledby=""h-contact">
+        <h2 id="h-contact">Contact</h2>
+        <p>Built by Kelvin Bruce Mupenzi.</p>
+        <ul class="contact">
+          <li>GitHub: <a href="https://github.com/kelvinbruce110" rel="noopener">github.com/kelvinbruce110</a></li>
+          <li>Email: <a href="mailto:b.mupenzi1@alustudent.com">b.mupenzi1@alustudent.com</a></li>
+        </ul>
+      </section>
+      <section class="panel prose" aria-labelledby="h-how">
+        <h2 id="h-how">Good to know</h2>
+        <ul>
+          <li>Amounts are stored in Rwandan francs (RWF). USD and EUR use the rates you set in Settings.</li>
+          <li>Press <kbd>?</kbd> anywhere to see the keyboard shortcuts.</li>
+          <li>The search box accepts real regular expressions, like <code>(coffee|tea)</code>.</li>
+        </ul>
+      </section>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <p>PennyWise · Built by Kelvin Bruce Mupenzi · Your data stays in this browser.</p>
+  </footer>
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <form method="dialog">
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-message"></p>
+      <div class="row end">
+        <button type="submit" class="btn" value="cancel" autofocus>Cancel</button>
+        <button type="submit" class="btn danger" id="confirm-ok" value="ok">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="help-dialog" aria-labelledby="help-title">
+    <form method="dialog">
+      <h2 id="help-title">Keyboard shortcuts</h2>
+      <p class="hint">Shortcuts work when you are not typing in a field.</p>
+      <table class="shortcuts">
+        <caption class="sr-only">Keyboard shortcuts</caption>
+        <thead><tr><th scope="col">Keys</th><th scope="col">Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>1</kbd> to <kbd>5</kbd></td><td>Go to Dashboard, Records, Add expense, Settings or About</td></tr>
+          <tr><td><kbd>n</kbd></td><td>Add a new expense</td></tr>
+          <tr><td><kbd>/</kbd></td><td>Search your records</td></tr>
+          <tr><td><kbd>d</kbd></td><td>Switch between dark and light mode</td></tr>
+          <tr><td><kbd>?</kbd></td><td>Open this panel</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Close a panel, or cancel an inline edit</td></tr>
+          <tr><td><kbd>Enter</kbd></td><td>Save an inline edit</td></tr>
+        </tbody>
+      </table>
+      <div class="row end"><button type="submit" class="btn primary" value="close" autofocus>Close</button></div>
+    </form>
+  </dialog>
+  <div class="toasts">
+    <div id="toast-polite" class="toast" role="status" aria-live="polite"></div>
+    <div id="toast-alert" class="toast is-alert" role="alert" aria-live="assertive"></div>
+  </div>
+  <script src="scripts/validators.js"></script>
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/state.js"></script>
+  <script src="scripts/search.js"></script>
+  <script src="scripts/ui.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
