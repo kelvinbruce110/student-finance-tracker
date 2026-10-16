@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tests · PennyWise</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <style>
+    .results { width: 100%; border-collapse: collapse; }
+    .results th, .results td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .pass { color: #5fd3a0; font-weight: 700; }
+    .fail { color: var(--danger); font-weight: 700; }
+    .summary { font-size: 1.15rem; font-weight: 700; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+  <main id="main" tabindex="-1">
+    <header class="view-head">
+      <h1>PennyWise tests</h1>
+      <p class="lead">Checks every regex rule, the search helpers, stats, sorting, currency, import validation and seed.json. Open this page through a local server so seed.json can be fetched.</p>
+    </header>
+    <p class="summary" id="summary" role=""status" aria-live="polite">Running tests…</p>
+    <table class="results">
+      <caption class="sr-only">Test results</caption>
+      <thead><tr><th scope="col">Result</th><th scope="col">Test</th><th scope="col">Details</th></tr></thead>
+      <tbody id="results"></tbody>
+    </table>
+    <p class="row"><a class="btn" href="index.html">Back to PennyWise</a></p>
+  </main>
+
+  <script src="scripts/validators.js"></script>
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/state.js"></script>
+  <script src="scripts/search.js"></script>
+  <script>
+    const results = [];
+
+    function test(name, check) {
+      try {
+        const outcome = check();
+        results.push({ name: name, pass: outcome === true, details: outcome === true ? '' : 'returned ' + JSON.stringify(outcome) });
+      } catch (error) {
+        results.push({ name: name, pass: false, details: error.message });
+      }
+    }
+
+    function same(actual, expected) {
+      return JSON.stringify(actual) === JSON.stringify(expected) || 'got ' + JSON.stringify(actual) + ', expected ' + JSON.stringify(expected);
+    }
+
+    ['Lunch', 'Lunch at cafeteria', 'A', 'Bus #12 fare'].forEach(function (text) {
+      test('description pattern accepts "' + text + '"', function () { return PATTERNS.description.test(text); });
+    });
+    [' Lunch', 'Lunch ', '  Lunch  ', ''].forEach(function (text) {
+      test('description pattern rejects "' + text + '"', function () { return !PATTERNS.description.test(text); });
+    });
+    test('collapseSpaces turns double spaces into one', function () { return same(collapseSpaces('Lunch   at  cafeteria'), 'Lunch at cafeteria'); });
+    test('validateDescription collapses inner spaces', function () { return same(validateDescription('Lunch   at cafeteria').value, 'Lunch at cafeteria'); });
+    test('validateDescription requires a letter (lookahead)', function () { return !validateDescription('12345').valid && validateDescription('Bus 12').valid; });
+
+    ['0', '5', '12', '12.5', '12.50', '1500', '2200.50', '0.99'].forEach(function (text) {
+      test('amount pattern accepts "' + text + '"', function () { return PATTERNS.amount.test(text); });
+    });
+    ['', '-5', '012', '12.345', '1,500', '12.', '.5', 'abc', '1e3'].forEach(function (text) {
+      test('amount pattern rejects "' + text + '"', function () { return !PATTERNS.amount.test(text); });
+    });
+    test('validateAmount rejects 0', function () { return !validateAmount('0').valid; });
+    test('validateAmount returns a number', function () { return same(validateAmount('12.50').value, 12.5); });
+
+    ['2026-10-11', '2025-09-29', '2024-02-29', '1999-12-31'].forEach(function (text) {
+      test('date pattern accepts "' + text + '"', function () { return PATTERNS.date.test(text); });
+    });
+    ['2026-13-01', '2026-00-10', '2026-10-32', '26-10-11', '2026/10/11', '2026-1-1'].forEach(function (text) {
+      test('date pattern rejects "' + text + '"', function () { return !PATTERNS.date.test(text); });
+    });
+    test('validateDate rejects Feb 30', function () { return !validateDate('2026-02-30').valid; });
+    test('validateDate accepts a leap day', function () { return validateDate('2024-02-29').valid; });
+    test('validateDate rejects a non-leap Feb 29', function () { return !validateDate('2026-02-29').valid; });
+
+    ['Food', 'Airtime-Data', 'Mobile-Money-Fees', 'Eating out', 'Rent'].forEach(function (text) {
+      test('category pattern accepts "' + text + '"', function () { return PATTERNS.category.test(text); });
+    });
+    ['', 'Food2', 'Airtime/Data', ' Food', 'Food ', 'Food--Data', 'Eating  out', '-Food'].forEach(function (text) {
+      test('category pattern rejects "' + text + '"', function () { return !PATTERNS.category.test(text); });
+    });
+
+    test('back-reference finds "lunch lunch"', function () { return same('Lunch lunch today'.match(PATTERNS.duplicateWord)[1], 'Lunch'); });
+    test('back-reference ignores different words', function () { return !PATTERNS.duplicateWord.test('Lunch at cafeteria'); });
+    test('back-reference ignores partial words', function () { return !PATTERNS.duplicateWord.test('the other'); });
+    test('validateDescription warns about a repeated word', function () { return validateDescription('Samosa samosa and tea').warning.toLowerCase().includes('samosa'); });
+
+    test('validateRecordFields accepts a goodRecord record', function () {
+      return validateRecordFields({ description: 'Lunch', amount: '1500', category: 'Food', date: '2026-10-11' }).valid;
+    });
+    test('validateRecordFields reports every bad field', function () {
+      const result = validateRecordFields({ description: ' x', amount: '-1', category: 'F1', date: 'nope' });
+      return same(Object.keys(result.errors).sort(), ['amount', 'category', 'date', 'description']);
+    });
+
+    test('compileRegex returns an error for a bad pattern', function () { return compileRegex('(unclosed', true).error.indexOf('Invalid pattern') === 0; });
+    test('compileRegex: empty pattern means no filter', function () { return compileRegex('', true).regex === null; });
+    test('compileRegex is case-insensitive by default', function () { return compileRegex('coffee', true).regex.flags.indexOf('i') !== -1; });
+    test('compileRegex can be case-sensitive', function () { return compileRegex('coffee', false).regex.flags.indexOf('i') === -1; });
+    test('cents pattern matches 2,200.50', function () { return recordMatches(compileRegex('\\.\\d{2}\\b', true).regex, ['2,200.50']); });
+    test('cents pattern does not match 1,500', function () { return !recordMatches(compileRegex('\\.\\d{2}\\b', true).regex, ['1,500']); });
+    test('(coffee|tea) matches "Green TEA"', function () { return recordMatches(compileRegex('(coffee|tea)', true).regex, ['Green TEA']); });
+    test('splitMatches marks matches', function () {
+      return same(splitMatches('Coffee and tea', compileRegex('(coffee|tea)', true).regex),
+        [{ text: 'Coffee', match: true }, { text: ' and ', match: false }, { text: 'tea', match: true }]);
+    });
+    test('splitMatches survives zero-length matches', function () { return splitMatches('abc', compileRegex('x*', true).regex).length > 0; });
+    test('repeated test() calls are not tripped by lastIndex', function () {
+      const regex = compileRegex('a', true).regex;
+      return recordMatches(regex, ['a']) && recordMatches(regex, ['a']);
+    });
+
+    const sample = [
+      { id: 'rec_0001', amount: 1500, category: 'Food', date: '2026-10-11' },
+      { id: 'rec_0002', amount: 2200.5, category: 'Food', date: '2026-10-11' },
+      { id: 'rec_0003', amount: 1000, category: 'Transport', date: '2026-10-10' },
+      { id: 'rec_0004', amount: 999, category: 'Books', date: '2026-09-30' }
+    ];
+    test('totalAmount avoids floating-point drift', function () { return same(totalAmount([{ amount: 0.1 }, { amount: 0.2 }]), 0.3); });
+    test('totalAmount sums records', function () { return same(totalAmount(sample), 5699.5); });
+    test('categoryTotals sorts highest first', function () { return same(categoryTotals(sample)[0], { category: 'Food', total: 3700.5, count: 2 }); });
+    test('monthTotal only counts that month', function () { return same(monthTotal(sample, '2026-10'), 4700.5); });
+    test('lastNDays returns 7 days ending today', function () {
+      const days = lastNDays(sample, 7, new Date(2026, 9, 11));
+      return same([days.length, days[6].date, days[6].total, days[5].total, days[0].date], [7, '2026-10-11', 3700.5, 1000, '2026-10-05']);
+    });
+    test('capStatus: under the cap', function () { const s = capStatus(42101.25, 50000); return !s.over && s.remaining === 7898.75; });
+    test('capStatus: over the cap', function () { const s = capStatus(52000, 50000); return s.over && s.remaining === -2000; });
+    test('capStatus: exactly at the cap is not over', function () { return !capStatus(50000, 50000).over; });
+    test('addDays crosses a month boundary', function () { return same(addDays('2026-10-01', -1), '2026-09-30'); });
+    test('shiftRecordDates leaves old records untouched', function () {
+      const moved = shiftRecordDates([{ date: '2024-02-29' }, { date: '2026-10-03' }, { date: '2026-10-05' }], '2026-10-13');
+      return same(moved.map(function (r) { return r.date; }), ['2024-02-29', '2026-10-11', '2026-10-13']);
+    });
+
+    const sortable = [
+      { id: 'rec_0001', description: 'banana', amount: 5, date: '2026-01-02', createdAt: 'a' },
+      { id: 'rec_0002', description: 'Apple', amount: 50, date: '2026-01-01', createdAt: 'b' },
+      { id: 'rec_0003', description: 'cherry', amount: 10, date: '2026-01-03', createdAt: 'c' }
+    ];
+    test('sort by date, newest first', function () { return same(sortRecords(sortable, 'date', 'desc').map(function (r) { return r.id; }), ['rec_0003', 'rec_0001', 'rec_0002']); });
+    test('sort by description A to Z ignores case', function () { return same(sortRecords(sortable, 'description', 'asc').map(function (r) { return r.description; }), ['Apple', 'banana', 'cherry']); });
+    test('sort by amount, high to low', function () { return same(sortRecords(sortable, 'amount', 'desc').map(function (r) { return r.amount; }), [50, 10, 5]); });
+    test('sorting does not change the original array', function () { sortRecords(sortable, 'amount', 'asc'); return sortable[0].id === 'rec_0001'; });
+
+    test('convert RWF to USD with a manual rate', function () { return same(convertAmount(14500, 'USD', { USD: 1450 }), 10); });
+    test('convert to the base currency is unchanged', function () { return same(convertAmount(1500, 'RWF', { USD: 1450 }), 1500); });
+    test('formatMoney shows cents only when needed (RWF)', function () { return same([formatMoney(1500, 'RWF'), formatMoney(2200.5, 'RWF')], ['RWF 1,500', 'RWF 2,200.50']); });
+    test('formatMoney always shows 2 decimals for USD', function () { return same(formatMoney(10, 'USD'), 'USD 10.00'); });
+    test('formatNumber adds thousands separators', function () { return same(formatNumber(8500), '8,500'); });
+
+    const goodRecord = { id: 'rec_0001', description: 'Lunch', amount: 1500, category: 'Food', date: '2026-10-11', createdAt: '2026-10-11T10:00:00.000Z', updatedAt: '2026-10-11T10:00:00.000Z' };
+    test('import accepts a valid array', function () { return validateImportPayload([goodRecord]).ok; });
+    test('import accepts { records, settings }', function () { return validateImportPayload({ records: [goodRecord], settings: { cap: 70000 } }).settings.cap === 70000; });
+    test('import rejects a non-list', function () { return !validateImportPayload({ hello: 'world' }).ok; });
+    test('import rejects a bad id', function () { return !validateImportPayload([Object.assign({}, goodRecord, { id: 'abc' })]).ok; });
+    test('import rejects a string amount', function () { return !validateImportPayload([Object.assign({}, goodRecord, { amount: '15' })]).ok; });
+    test('import rejects a bad date', function () { return !validateImportPayload([Object.assign({}, goodRecord, { date: '2026-13-40' })]).ok; });
+    test('import rejects duplicate ids', function () { return !validateImportPayload([goodRecord, goodRecord]).ok; });
+    test('import rejects missing timestamps', function () { return !validateImportPayload([Object.assign({}, goodRecord, { createdAt: undefined })]).ok; });
+    test('import keeps valid records and reports the bad ones', function () {
+      const result = validateImportPayload([goodRecord, Object.assign({}, goodRecord, { id: 'rec_0002', amount: -1 })]);
+      return result.records.length === 1 && result.errors.length === 1;
+    });
+    test('sanitizeSettings falls back to defaults for junk', function () {
+      const s = sanitizeSettings({ cap: 'lots', theme: 'neon', rates: { USD: -3 }, categories: ['Ok', 'Bad1'] });
+      return same([s.cap, s.theme, s.rates.USD, s.categories], [50000, 'dark', 1450, ['Ok']]);
+    });
+
+    function showResults() {
+      const body = document.getElementById('results');
+      results.forEach(function (r) {
+        const row = document.createElement('tr');
+        const status = document.createElement('td');
+        status.className = r.pass ? 'pass' : 'fail';
+        status.textContent = r.pass ? '✓ Pass' : '✗ Fail';
+        const name = document.createElement('td');
+        name.textContent = r.name;
+        const details = document.createElement('td');
+        details.textContent = r.details;
+        row.append(status, name, details);
+        body.append(row);
+      });
+      const passed = results.filter(function (r) { return r.pass; }).length;
+      const summary = document.getElementById('summary');
+      const allPassed = passed === results.length;
+      summary.textContent = allPassed ? 'All ' + results.length + ' tests passed.' : (results.length - passed) + ' of ' + results.length + ' tests failed.';
+      summary.className = 'summary ' + (allPassed ? 'pass' : 'fail');
+      document.title = passed + '/' + results.length + ' · PennyWise tests';
+    }
+
+    fetch('seed.json')
+      .then(function (response) { return response.text(); })
+      .then(function (text) {
+        const seed = parseImport(text);
+        test('seed.json passes validation (' + seed.records.length + ' records)', function () { return seed.ok || seed.errors.join('; '); });
+        test('seed.json has at least 10 records', function () { return seed.records.length >= 10; });
+        test('seed.json includes a leap day', function () { return seed.records.some(function (r) { return r.date === '2024-02-29'; }); });
+        test('seed.json includes a tiny and a huge amount', function () {
+          return seed.records.some(function (r) { return r.amount < 0.05; }) && seed.records.some(function (r) { return r.amount > 100000000; });
+        });
+        test('seed.json includes a repeated-word description', function () {
+          return seed.records.some(function (r) { return PATTERNS.duplicateWord.test(r.description); });
+        });
+      })
+      .catch(function (error) {
+        test('seed.json can be fetched (use a local server)', function () { return error.message; });
+      })
+      .then(showResults);
+  </script>
+</body>
+</html>
