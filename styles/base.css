@@ -1,0 +1,97 @@
+:root {
+  --bg: #0d141c;
+  --surface: #141d28;
+  --surface-2: #1b2634;
+  --border: #2a3849;
+  --control-border: #72869e;
+  --text: #e9eef4;
+  --text-muted: #a3b1c2;
+  --accent: #6ab0ff;
+  --accent-ink: #07121f;
+  --danger: #ff8a8a;
+  --warn: #f2b866;
+  --focus: #ffd166;
+  --mark-bg: #ffe08a;
+  --mark-ink: #1b1500;
+  --c1: #4f9cf7;
+  --c2: #34c38f;
+  --c3: #f5b041;
+  --c4: #ef6f6c;
+  --c5: #a78bfa;
+  --c6: #22b8cf;
+  --c7: #f783ac;
+  --c8: #94d82d;
+  --c9: #adb5bd;
+  --radius: 10px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-2: #eaf0f7;
+  --border: #cfd9e5;
+  --control-border: #677a92;
+  --text: #15202c;
+  --text-muted: #46566a;
+  --accent: #1c5dc0;
+  --accent-ink: #ffffff;
+  --danger: #b42318;
+  --warn: #8a5300;
+  --focus: #b45309;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 1rem/1.5 var(--font);
+}
+
+h1, h2 { margin: 0; line-height: 1.2; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.15rem; }
+p { margin: 0; }
+a { color: var(--accent); }
+code, kbd { font-family: ui-monospace, Consolas, monospace; font-size: 0.9em; }
+code { background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 4px; }
+kbd { background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 0.05em 0.4em; }
+mark { background: var(--mark-bg); color: var(--mark-ink); padding: 0 0.15em; border-radius: 3px; }
+
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -4rem;
+  z-index: 100;
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.skip-link:focus { top: 0.75rem; }
+
+.muted { color: var(--text-muted); }
+
+@media (min-width: 768px) {
+  h1 { font-size: 1.9rem; }
+}
