@@ -1,0 +1,218 @@
+[
+  {
+    "id": "rec_0001",
+    "description": "Leap day textbook swap",
+    "amount": 1200,
+    "category": "Books",
+    "date": "2024-02-29",
+    "createdAt": "2024-02-29T09:00:00.000Z",
+    "updatedAt": "2024-03-02T10:00:00.000Z"
+  },
+  {
+    "id": "rec_0002",
+    "description": "Year end dinner with the study group",
+    "amount": 18500.75,
+    "category": "Food",
+    "date": "2025-12-31",
+    "createdAt": "2025-12-31T20:15:00.000Z",
+    "updatedAt": "2025-12-31T20:15:00.000Z"
+  },
+  {
+    "id": "rec_0003",
+    "description": "Coffee coffee refill on New Year's Day",
+    "amount": 450,
+    "category": "Food",
+    "date": "2026-01-01",
+    "createdAt": "2026-01-01T08:05:00.000Z",
+    "updatedAt": "2026-01-01T08:05:00.000Z"
+  },
+  {
+    "id": "rec_0004",
+    "description": "Oldest receipt in the shoebox",
+    "amount": 75,
+    "category": "Other",
+    "date": "1999-12-31",
+    "createdAt": "2026-01-02T11:00:00.000Z",
+    "updatedAt": "2026-01-02T11:00:00.000Z"
+  },
+  {
+    "id": "rec_0005",
+    "description": "Rounding refund from the bank",
+    "amount": 0.01,
+    "category": "Fees",
+    "date": "2026-03-15",
+    "createdAt": "2026-03-15T13:00:00.000Z",
+    "updatedAt": "2026-03-15T13:00:00.000Z"
+  },
+  {
+    "id": "rec_0006",
+    "description": "Annual tuition instalment",
+    "amount": 1500000,
+    "category": "Fees",
+    "date": "2025-09-01",
+    "createdAt": "2025-09-01T07:30:00.000Z",
+    "updatedAt": "2025-09-01T07:30:00.000Z"
+  },
+  {
+    "id": "rec_0007",
+    "description": "Lab equipment order (maximum amount test)",
+    "amount": 999999999.99,
+    "category": "Other",
+    "date": "2025-08-15",
+    "createdAt": "2025-08-15T12:00:00.000Z",
+    "updatedAt": "2025-08-20T12:00:00.000Z"
+  },
+  {
+    "id": "rec_0008",
+    "description": "C++ (2nd ed.) [used] textbook",
+    "amount": 4500,
+    "category": "Books",
+    "date": "2026-02-10",
+    "createdAt": "2026-02-10T10:10:00.000Z",
+    "updatedAt": "2026-02-10T10:10:00.000Z"
+  },
+  {
+    "id": "rec_0009",
+    "description": "Lunch (cafeteria) *special* $5.00 + tax",
+    "amount": 2500,
+    "category": "Food",
+    "date": "2026-02-11",
+    "createdAt": "2026-02-11T12:40:00.000Z",
+    "updatedAt": "2026-02-11T12:40:00.000Z"
+  },
+  {
+    "id": "rec_0010",
+    "description": "Café déjà vu crêpes",
+    "amount": 3200,
+    "category": "Food",
+    "date": "2026-02-14",
+    "createdAt": "2026-02-14T15:20:00.000Z",
+    "updatedAt": "2026-02-14T15:20:00.000Z"
+  },
+  {
+    "id": "rec_0011",
+    "description": "Pattern ^moto$ (a|b)* [x] \\d{2}",
+    "amount": 100,
+    "category": "Other",
+    "date": "2026-04-01",
+    "createdAt": "2026-04-01T09:00:00.000Z",
+    "updatedAt": "2026-04-01T09:00:00.000Z"
+  },
+  {
+    "id": "rec_0012",
+    "description": "back-to-back back-to-back moto rides",
+    "amount": 3000,
+    "category": "Transport",
+    "date": "2026-05-20",
+    "createdAt": "2026-05-20T18:00:00.000Z",
+    "updatedAt": "2026-05-20T18:00:00.000Z"
+  },
+  {
+    "id": "rec_0013",
+    "description": "Tea | coffee | TEA combo, 2.50 each",
+    "amount": 5000.5,
+    "category": "Food",
+    "date": "2026-06-05",
+    "createdAt": "2026-06-05T10:30:00.000Z",
+    "updatedAt": "2026-06-05T10:30:00.000Z"
+  },
+  {
+    "id": "rec_0014",
+    "description": "Mobile money: withdraw/deposit fee 1%",
+    "amount": 330,
+    "category": "Mobile-Money-Fees",
+    "date": "2026-06-12",
+    "createdAt": "2026-06-12T16:00:00.000Z",
+    "updatedAt": "2026-06-12T16:00:00.000Z"
+  },
+  {
+    "id": "rec_0015",
+    "description": "Long description that tests the very edge of the eighty character limit word wor",
+    "amount": 99,
+    "category": "Other",
+    "date": "2026-07-07",
+    "createdAt": "2026-07-07T07:07:00.000Z",
+    "updatedAt": "2026-07-07T07:07:00.000Z"
+  },
+  {
+    "id": "rec_0016",
+    "description": "Room rent share",
+    "amount": 7500,
+    "category": "Rent",
+    "date": "2026-10-03",
+    "createdAt": "2026-10-03T07:30:00.000Z",
+    "updatedAt": "2026-10-03T07:30:00.000Z"
+  },
+  {
+    "id": "rec_0017",
+    "description": "Notebook and pens",
+    "amount": 2300,
+    "category": "Books",
+    "date": "2026-10-05",
+    "createdAt": "2026-10-05T09:05:00.000Z",
+    "updatedAt": "2026-10-05T09:05:00.000Z"
+  },
+  {
+    "id": "rec_0018",
+    "description": "Movie night with friends",
+    "amount": 4500.75,
+    "category": "Entertainment",
+    "date": "2026-10-05",
+    "createdAt": "2026-10-05T19:45:00.000Z",
+    "updatedAt": "2026-10-05T19:45:00.000Z"
+  },
+  {
+    "id": "rec_0019",
+    "description": "Moto to town",
+    "amount": 1500,
+    "category": "Transport",
+    "date": "2026-10-06",
+    "createdAt": "2026-10-06T14:00:00.000Z",
+    "updatedAt": "2026-10-06T14:00:00.000Z"
+  },
+  {
+    "id": "rec_0020",
+    "description": "Samosa samosa and tea at the kiosk",
+    "amount": 600,
+    "category": "Food",
+    "date": "2026-10-08",
+    "createdAt": "2026-10-08T10:30:00.000Z",
+    "updatedAt": "2026-10-08T10:30:00.000Z"
+  },
+  {
+    "id": "rec_0021",
+    "description": "Airtime top up",
+    "amount": 2000,
+    "category": "Airtime-Data",
+    "date": "2026-10-09",
+    "createdAt": "2026-10-09T06:55:00.000Z",
+    "updatedAt": "2026-10-09T06:55:00.000Z"
+  },
+  {
+    "id": "rec_0022",
+    "description": "Kigali bus fare",
+    "amount": 450,
+    "category": "Transport",
+    "date": "2026-10-10",
+    "createdAt": "2026-10-10T17:25:00.000Z",
+    "updatedAt": "2026-10-10T17:25:00.000Z"
+  },
+  {
+    "id": "rec_0023",
+    "description": "Lunch at cafeteria",
+    "amount": 1500,
+    "category": "Food",
+    "date": "2026-10-11",
+    "createdAt": "2026-10-11T12:20:00.000Z",
+    "updatedAt": "2026-10-11T12:20:00.000Z"
+  },
+  {
+    "id": "rec_0024",
+    "description": "Coffee with classmates",
+    "amount": 2200.5,
+    "category": "Food",
+    "date": "2026-10-11",
+    "createdAt": "2026-10-11T15:10:00.000Z",
+    "updatedAt": "2026-10-11T15:10:00.000Z"
+  }
+]
