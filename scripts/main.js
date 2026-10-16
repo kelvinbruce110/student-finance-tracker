@@ -1,0 +1,2 @@
+initState();
+initUI();
